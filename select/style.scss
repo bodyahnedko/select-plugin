@@ -19,6 +19,7 @@ body {
 .select {
 	$b: &;
 	position: relative;
+	z-index: 100;
 
 	&.open {
 			
@@ -29,6 +30,10 @@ body {
 			}
 
 			&__dropdown {
+				display: block;
+			}
+
+			&__backdrop {
 				display: block;
 			}
 		}
@@ -43,6 +48,11 @@ body {
 		align-items: center;
 		padding: 0 1rem;
 		cursor: pointer;
+		position: relative;
+
+		span {
+			font-weight: 500;
+		}
 	}
 
 	&__dropdown {
@@ -68,6 +78,10 @@ body {
 		padding: 1rem;
 		border-bottom: 1px solid #cccccc;
 
+		&.selected {
+			background-color: bisque;
+		}
+
 		&:hover {
 			background-color: #eee;
 			cursor: pointer;
@@ -77,5 +91,16 @@ body {
 		&:last-child {
 			border-bottom: none;
 		}
+	}
+
+	&__backdrop {
+		position: fixed;
+		z-index: -1;
+		display: none;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		background-color: transparent;
 	}
 }

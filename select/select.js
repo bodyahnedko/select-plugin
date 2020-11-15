@@ -1,16 +1,25 @@
-const getTemplate = () => {
+const getTemplate = (data = [], placeholder, selectedID) => {
+	let text = placeholder ?? 'placeholder';
+	const items = data.map((item) => {
+		let cls = '';
+
+		if (item.id === selectedID) {
+			text = item.value;
+			cls = 'selected';
+		}
+
+		return `<li class="select__item ${cls}" data-type="item" data-id="${item.id}">${item.value}</li>`;
+	});
+
 	return `
+		<div class="select__backdrop" data-type="backdrop"></div>
 		<div class="select__input" data-type="input">
-			<span>111</span>
-			<i class="fa fa-chevron-down"></i>
+			<span data-type="value">${text}</span>
+			<i class="fa fa-chevron-down" data-type="arrow"></i>
 		</div>
 		<div class="select__dropdown">
 			<ul class="select__list">
-				<li class="select__item">123</li>
-				<li class="select__item">123</li>
-				<li class="select__item">123</li>
-				<li class="select__item">123</li>
-				<li class="select__item">123</li>
+				${items.join('')}
 			</ul>
 		</div>
 	`;
@@ -19,27 +28,50 @@ const getTemplate = () => {
 export class Select {
 	constructor(selector, options) {
 		this.$el = document.querySelector(selector);
+		this.options = options;
+		this.selectedID = options.selectedID;
 
 		this.#render();
 		this.#setup();
 	}
 
 	#render() {
+		const { placeholder, data } = this.options;
 		this.$el.classList.add('select');
-		this.$el.innerHTML = getTemplate();
+		this.$el.innerHTML = getTemplate(data, placeholder, this.selectedID);
 	}
 
 	#setup() {
 		this.clickHandler = this.clickHandler.bind(this);
 		this.$el.addEventListener('click', this.clickHandler);
+		this.$arrow = this.$el.querySelector('[data-type="arrow"]');
+		this.$value = this.$el.querySelector('[data-type="value"]');
 	}
 
 	clickHandler(event) {
 		const { type } = event.target.dataset;
 
-		if(type === 'input') {
+		if (type === 'input') {
 			this.toggle();
+		} else if (type === 'item') {
+			const id = event.target.dataset.id;
+			this.select(id);
+		} else if (type === 'backdrop') {
+			this.close();
 		}
+	}
+
+	get current() {
+		return this.options.data.find((item) => item.id === this.selectedID);
+	}
+
+	select(id) {
+		this.selectedID = id;
+		this.$value.textContent = this.current.value;
+		this.$el.querySelectorAll('[data-type="item"]').forEach((item) => item.classList.remove('selected'));
+		this.$el.querySelector(`[data-id="${id}"]`).classList.add('selected');
+		this.options.onSelect ? this.options.onSelect(this.current) : null;
+		this.close();
 	}
 
 	get isOpen() {
@@ -52,11 +84,18 @@ export class Select {
 
 	open() {
 		this.$el.classList.add('open');
+		this.$arrow.classList.remove('fa-chevron-down');
+		this.$arrow.classList.add('fa-chevron-up');
 	}
 
 	close() {
 		this.$el.classList.remove('open');
+		this.$arrow.classList.remove('fa-chevron-up');
+		this.$arrow.classList.add('fa-chevron-down');
 	}
 
-	destroy() {}
+	destroy() {
+		this.$el.removeEventListener('click', this.clickHandler);
+		this.$el.innerHTML = '';
+	}
 }
